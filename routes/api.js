@@ -4,6 +4,7 @@ var router = express.Router();
 
 
 
+// get data in type by id
 router.get('/:id', async (req, res) => {
     const objectId = req.params.id;
 
