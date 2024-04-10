@@ -7,6 +7,8 @@ const cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var homeRouter = require('./routes/home');
+var overalRouter = require('./routes/overal');
 var apiRouter = require('./routes/api');
 
 var app = express();
@@ -25,6 +27,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/index', indexRouter);
 app.use('/users', usersRouter);
+app.use('/home', homeRouter);
+app.use('/overal', overalRouter);
 app.use('/api', apiRouter);
 
 // catch 404 and forward to error handler
@@ -40,7 +44,9 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', {
+    title: 'Error'
+  });
 });
 
 module.exports = app;
