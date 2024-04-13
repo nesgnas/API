@@ -116,9 +116,9 @@ router.get('/product', async(req, res) =>{
 /**
  * GET - get all product by supplier name (part of the function new order)
  */
-router.get('/order/products', async(req, res) =>{
+router.get('/order/products/:supplierName', async(req, res) =>{
 
-    const {supplierName} = req.body;
+    const {supplierName} = req.params;
     const allProduct = await getAllProductbySupplier(supplierName);
 
     res.json(allProduct);
