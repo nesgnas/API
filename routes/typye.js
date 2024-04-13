@@ -12,6 +12,11 @@ const {insertNewProduct} = require('./postgres');
 const {insertNewItemToProductCategoryTable} = require('./postgres');
 const {getAllOrder} = require('./postgres');
 const {getAllProdct} = require('./postgres');
+const {getAllProductbySupplier} = require('./postgres');
+const {getAllWarehouseName} = require('./postgres');
+const {getAllSupplierName} = require('./postgres');
+const {createNewOrder} = require('./postgres');
+const {getCategoryNameInProductForm} = require('./postgres');
 
 var router = express.Router();
 
@@ -99,10 +104,62 @@ router.get('/order', async(req, res) =>{
     res.json(allOrder)
 })
 
+/**
+ * GET - get all product in the database 
+ */
 router.get('/product', async(req, res) =>{
     const allProduct = await getAllProdct();
 
     res.json(allProduct);
+})
+
+/**
+ * GET - get all product by supplier name (part of the function new order)
+ */
+router.get('/order/products/:supplierName', async(req, res) =>{
+
+    const {supplierName} = req.params;
+    const allProduct = await getAllProductbySupplier(supplierName);
+
+    res.json(allProduct);
+})
+
+/**
+ * GET - get all warehouse (part of the function new oreder)
+ */
+router.get('/order/warehouse', async(req, res) =>{
+
+    const allWarehouse = await getAllWarehouseName();
+
+    res.json(allWarehouse);
+})
+
+/**
+ * GET - get all supplier name (part of the function new order)
+ */
+router.get('/order/supplier', async(req, res) =>{
+    const allSupplier = await getAllSupplierName();
+
+    res.json(allSupplier);
+})
+
+/**
+ * POST - new order api, create new order
+ */
+router.post('/order', async(req, res) =>{
+    const {orders} = req.body;
+    const message = await createNewOrder(orders);
+
+    res.json(message);
+})
+
+/**
+ * GET - to get all category name 
+ */
+router.get('/product/category', async(req, res) =>{
+    const categories = await getCategoryNameInProductForm();
+
+    res.json(categories);
 })
 
 module.exports = router;
