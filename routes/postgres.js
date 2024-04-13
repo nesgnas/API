@@ -264,6 +264,109 @@ async function getAllProdct(){
     return result.rows;
 }
 
+/**
+ * Part of the new order API - get all product by supplier
+ */
+async function getAllProductbySupplier(supplierName){
+    const sql = `SELECT Product.Pname FROM Product WHERE Product.SupplierName = $1;`;
+    const value = [supplierName];
+    const result = await executeQuery(sql, value);
+
+    return result.rows;
+}
+
+/**
+ * Part of the new order API - get all warehouse
+ */
+async function getAllWarehouseName(){
+    const sql = `SELECT Warehouse.WName FROM Warehouse;`;
+    const result = await executeQuery(sql);
+
+    return result.rows;
+}
+
+/**
+ * Part of the new order API - get all supplier name
+ */
+async function getAllSupplierName(){
+    const allSupplier = await getSuppliers();
+
+    const allSupplierName = getSupplierName(allSupplier);
+
+    return allSupplierName;
+}
+
+//funtion to get all supplier name from a json object array
+function getSupplierName(allSupplier){
+    var supplierNames = [];
+    for(var supplier of allSupplier){
+        supplierNames.push(supplier.suppliername);
+    }
+    return supplierNames;
+}
+
+//POST - function to create new order
+async function createNewOrder(orders){
+    const sql = `INSERT INTO Order_Detail(Order_Detail_Date, SupplierName) 
+            VALUES (current_timestamp, $1);`;
+    const value = [orders[0].SupplierName];
+    await executeQuery(sql, value);
+
+    for(var order of orders){
+        await insertIntoProductOrderTable(order);
+        await insertIntoProductWarehouseTable(order);
+    }
+
+    return { message: "create success" }
+}
+
+//function to insert into productOrder table - part of create new order POST
+async function insertIntoProductOrderTable(order){
+    const sql = `INSERT INTO Product_Order(PID, ProductName, SupplierName, WarehouseName, Order_Detail_ID, OrderDate, OrderQuantity)
+    WITH Needed_PID AS (
+        SELECT Product.PID AS NeededPID 
+        FROM Product 
+        WHERE Product.Pname = $1 AND Product.SupplierName = $2
+    )
+    SELECT Needed_PID.NeededPID, $3, $4, $5, (    
+        SELECT Order_Detail.CodeOrder 
+        FROM Order_Detail 
+        ORDER BY CodeOrder DESC LIMIT 1
+    ), CURRENT_TIMESTAMP, $6
+    FROM Needed_PID;
+    `;
+    const values = [order.ProductName, order.SupplierName, order.ProductName, order.SupplierName, order.Warehouse, order.Quantity];
+    await executeQuery(sql, values);
+}
+
+//function to insert into productWarehouse table - part of create new order POST
+async function insertIntoProductWarehouseTable(order){
+    const sql = `INSERT INTO Product_Warehouse (WName, PID, Quantity)
+    WITH NeededPID AS (
+        SELECT Product.PID AS NeededPID FROM Product WHERE Product.Pname = $1 AND Product.SupplierName = $2
+    ),
+    Existing_Record AS (
+        SELECT *
+        FROM Product_Warehouse
+        WHERE PID = (SELECT NeededPID FROM NeededPID) AND WName = $3
+    )
+    SELECT $4, NeededPID.NeededPID, $5
+    FROM NeededPID
+    ON CONFLICT (PID, WName) DO UPDATE
+    SET
+        Quantity = Product_Warehouse.Quantity + EXCLUDED.Quantity,
+        LastUpdatedDate = to_char(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
+        LastUpdatedTime = to_char(LOCALTIMESTAMP AT TIME ZONE 'GMT+7','HH24:MI:SS'),
+        Status = CASE
+                     WHEN Product_Warehouse.Quantity + EXCLUDED.Quantity <= 0 THEN 'Out of Stock'
+                     WHEN Product_Warehouse.Quantity + EXCLUDED.Quantity < 10 THEN 'Low Stock'
+                     ELSE 'In Stock'
+                END;
+    `;
+    const values = [order.ProductName, order.SupplierName, order.Warehouse, order.Warehouse, order.Quantity];
+    await executeQuery(sql, values);
+}
+
 
 pool.end;
 
@@ -293,6 +396,9 @@ module.exports = {
    insertNewProduct,
    insertNewItemToProductCategoryTable,
    getAllOrder,
-   getAllProdct
-
+   getAllProdct,
+   getAllProductbySupplier,
+   getAllWarehouseName,
+   getAllSupplierName,
+   createNewOrder,
 }
