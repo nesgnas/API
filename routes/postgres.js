@@ -1,3 +1,4 @@
+const { query } = require('express');
 const {Pool} = require('pg')
 require('dotenv').config()
 
@@ -180,6 +181,90 @@ async function deleteType(id){
     return {message:"delete success"}
 }
 
+//GET funtion to return product list
+async function getProductList(){
+    const sql = `SELECT Product.Pname,Product_Warehouse.PID, Type.TName , Product.UnitPrice, Product_Warehouse.Status
+                FROM Product
+                    INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
+                    INNER JOIN Product_Category ON Product.PID = Product_Category.PID
+                    INNER JOIN Type ON Product_Category.TID = Type.TID;`
+
+    const result = await executeQuery(sql);
+    return result.rows;
+}
+
+/**
+ * GET - funtion to return all the supplier
+ */
+async function getSuppliers(){
+    const sql = `SELECT * FROM Supplier`;
+    const result = await executeQuery(sql);
+    return result.rows;
+}
+
+/**
+ * POST - function to insert A supplier to database
+ */
+async function insertSupplierIntoDatabase(SupplierName, SupplierContact, SupplierAddress){
+    const sql = `INSERT INTO Supplier ( SupplierName, SupplierContact, SupplierAddress)
+                VALUES ($1, $2, $3)
+                RETURNING *;`;
+    const values = [SupplierName, SupplierContact, SupplierAddress];
+    const result = await executeQuery(sql, values);
+    return result.rows[0];
+}
+
+/**
+ * POST - function to insert new product to database
+ */
+async function insertNewProduct(productID, productName, productSupplierName, productPrice, productUnitPrice){
+    const sql = `INSERT INTO Product(PID, Pname , SupplierName, CostPrice , UnitPrice)
+            VALUES ($1 , $2, $3, $4, $5)
+            RETURNING *;`;
+    const values = [productID, productName, productSupplierName, productPrice, productUnitPrice];
+    const result = await executeQuery(sql, values);
+
+    return result.rows[0];
+}
+
+/**
+ * POST - function to insert new item to productcategory table
+ */
+async function insertNewItemToProductCategoryTable(productName, supplierName, productTypeName){
+    const sql = `INSERT INTO Product_Category(PID, TID)
+            VALUES ((SELECT PID FROM Product WHERE PName = $1 AND Product.SupplierName = $2),(SELECT Type.TID FROM Type WHERE TName = $3))
+            RETURNING *;`;
+    const values = [productName, supplierName, productTypeName];
+    const result = await executeQuery(sql, values);
+    return result.rows[0];
+    
+}
+
+/**
+ * GET - funtion to get all order
+ */
+async function getAllOrder(){
+    const sql = `select order_detail.order_detail_date , codeorder , suppliername from order_detail;
+    `;
+    const result = await executeQuery(sql)
+
+    return result.rows;
+}
+
+/** GET - function to get all product on product page */
+async function getAllProdct(){
+    const sql = `SELECT Product.PID, Type.TName ,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status
+                FROM Product
+                    INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
+                    INNER JOIN Product_Category ON Product.PID = Product_Category.PID
+                    INNER JOIN Type ON Product_Category.TID = Type.TID
+                    INNER JOIN Supplier ON Supplier.Suppliername = Product.Suppliername;`;
+    const result = await executeQuery(sql);
+
+    return result.rows;
+}
+
+
 pool.end;
 
 
@@ -202,4 +287,12 @@ module.exports = {
    updateItem,
    getTotalProduct,
    getTopSellings,
+   getProductList,
+   getSuppliers,
+   insertSupplierIntoDatabase,
+   insertNewProduct,
+   insertNewItemToProductCategoryTable,
+   getAllOrder,
+   getAllProdct
+
 }
