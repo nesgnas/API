@@ -367,6 +367,14 @@ async function insertIntoProductWarehouseTable(order){
     await executeQuery(sql, values);
 }
 
+//function to get all category name
+async function getCategoryNameInProductForm(){
+    const sql = `SELECT TName from Type`;
+    const result = await executeQuery(sql);
+    
+    return result.rows;
+}
+
 
 pool.end;
 
@@ -401,4 +409,5 @@ module.exports = {
    getAllWarehouseName,
    getAllSupplierName,
    createNewOrder,
+   getCategoryNameInProductForm,
 }
