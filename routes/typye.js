@@ -17,6 +17,8 @@ const {getAllWarehouseName} = require('./postgres');
 const {getAllSupplierName} = require('./postgres');
 const {createNewOrder} = require('./postgres');
 const {getCategoryNameInProductForm} = require('./postgres');
+const {getSupplierById} = require('./postgres');
+
 
 var router = express.Router();
 
@@ -71,6 +73,17 @@ router.get('/supplier', async(req, res) =>{
 })
 
 /**
+ * GET get supplier by id
+ */
+router.get('/supplier/:supplierName', async(req, res) =>{
+    const {supplierName} = req.params; 
+    console.log(supplierName)
+    const supplier = await getSupplierById(supplierName);
+
+    res.json(supplier);
+})
+
+/**
  * POST - add suppliers
  */
 router.post('/supplier', async(req, res) => {
@@ -120,7 +133,7 @@ router.get('/order/products/:supplierName', async(req, res) =>{
 
     const {supplierName} = req.params;
     const allProduct = await getAllProductbySupplier(supplierName);
-
+  
     res.json(allProduct);
 })
 
