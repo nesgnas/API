@@ -203,6 +203,18 @@ async function getSuppliers(){
 }
 
 /**
+ * GET - function to get supplier by id
+ */
+async function getSupplierById(supplierName){
+    const sql = `SELECT * FROM Supplier WHERE suppliername= $1`;
+
+    const value = [supplierName];
+    const result = await executeQuery(sql, value);
+
+    return result.rows[0];
+}
+
+/**
  * POST - function to insert A supplier to database
  */
 async function insertSupplierIntoDatabase(SupplierName, SupplierContact, SupplierAddress){
@@ -253,7 +265,7 @@ async function getAllOrder(){
 
 /** GET - function to get all product on product page */
 async function getAllProdct(){
-    const sql = `SELECT Product.PID, Type.TName ,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status
+    const sql = `SELECT Product.PID, Type.TName as Category,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status
                 FROM Product
                     INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
                     INNER JOIN Product_Category ON Product.PID = Product_Category.PID
@@ -410,4 +422,6 @@ module.exports = {
    getAllSupplierName,
    createNewOrder,
    getCategoryNameInProductForm,
+   getSupplierById,
+
 }
