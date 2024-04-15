@@ -52,6 +52,7 @@ router.get('/home/category', async(req, res) =>{
  * GET - get order number in home screen
  */
 router.get('/home/order', async(req, res) =>{
+    
     const orderNumber = await getOrderNumber();
     res.json(orderNumber);
 })
@@ -100,11 +101,13 @@ router.post('/supplier', async(req, res) => {
 router.post('/product', async(req, res) =>{
     const {pid, pname, suppliername, costprice, unitprice, TName } = req.body;
 
-    await insertNewProduct(pid, pname, suppliername, costprice, unitprice);
-    await insertNewItemToProductCategoryTable(pname, suppliername, TName);
+    const productInserted = await insertNewProduct(pid, pname, suppliername, costprice, unitprice);
+    const itemProductCategoryInserted = await insertNewItemToProductCategoryTable(pname, suppliername, TName);
 
     res.json({
-        "message": "add successfully"
+        "message": "add successfully",
+        "productInserted": productInserted,
+        "itemProductCategoryInserted": itemProductCategoryInserted 
     });
 })
 
