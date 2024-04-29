@@ -265,7 +265,7 @@ async function getAllOrder(){
 
 /** GET - function to get all product on product page */
 async function getAllProdct(){
-    const sql = `SELECT Product.PID, Type.TName as Category,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status
+    const sql = `SELECT Product.PID, Type.TName as Category,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status, Product.unitprice, Product.costprice
                 FROM Product
                     INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
                     INNER JOIN Product_Category ON Product.PID = Product_Category.PID
