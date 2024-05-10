@@ -405,6 +405,9 @@ async function getCategoryNameInProductForm(){
     return result.rows;
 }
 
+/**
+    get prodcut by product name
+ */
 async function getProductByName(productName){
     const sql = 'SELECT * FROM product WHERE pname= $1;'
     const value = [productName];

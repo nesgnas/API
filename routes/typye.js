@@ -191,6 +191,10 @@ router.get('/order/:codeOrder', async(req, res) =>{
     res.json(orderDetail);
 })
 
+
+/**
+ * GET - get product by product name
+ */
 router.get('/product/:productName', async(req, res) =>{
     const {productName} = req.params
 
