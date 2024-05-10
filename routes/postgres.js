@@ -263,6 +263,22 @@ async function getAllOrder(){
     return result.rows;
 }
 
+/**
+ * GET - function to get order detail by code order
+ */
+const getOrderDetailByCodeOrder = async (codeOrder) =>{
+    const sql = `SELECT ProductName , OrderQuantity , Product.UnitPrice
+                FROM Product RIGHT JOIN Order_History ON (Order_History.PID = Product.PID) 
+                WHERE order_history.order_detail_id = $1;`;
+    const value = [codeOrder];
+    const result = await executeQuery(sql, value);
+
+    return {
+        'message': 'get succesfully',
+        'result': result.rows
+    }
+}
+
 /** GET - function to get all product on product page */
 async function getAllProdct(){
     const sql = `SELECT Product.PID, Type.TName as Category,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status, Product.unitprice, Product.costprice
@@ -327,6 +343,7 @@ async function createNewOrder(orders){
     for(var order of orders){
         await insertIntoProductOrderTable(order);
         await insertIntoProductWarehouseTable(order);
+        console.log('huy dep trai: ' + order.ProductName);
     }
 
     return { message: "create success" }
@@ -334,6 +351,7 @@ async function createNewOrder(orders){
 
 //function to insert into productOrder table - part of create new order POST
 async function insertIntoProductOrderTable(order){
+    console.log("huy trai in productorder");
     const sql = `INSERT INTO Product_Order(PID, ProductName, SupplierName, WarehouseName, Order_Detail_ID, OrderDate, OrderQuantity)
     WITH Needed_PID AS (
         SELECT Product.PID AS NeededPID 
@@ -387,6 +405,21 @@ async function getCategoryNameInProductForm(){
     return result.rows;
 }
 
+/**
+    get prodcut by product name
+ */
+async function getProductByName(productName){
+    const sql = 'SELECT * FROM product WHERE pname= $1;'
+    const value = [productName];
+
+    const result = await executeQuery(sql, value);
+
+    return {
+        'message':"succesfully",
+        'result': result.rows[0]
+    }
+}
+
 
 pool.end;
 
@@ -423,5 +456,6 @@ module.exports = {
    createNewOrder,
    getCategoryNameInProductForm,
    getSupplierById,
-
+   getProductByName,
+   getOrderDetailByCodeOrder,
 }
