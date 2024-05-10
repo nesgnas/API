@@ -18,6 +18,8 @@ const {getAllSupplierName} = require('./postgres');
 const {createNewOrder} = require('./postgres');
 const {getCategoryNameInProductForm} = require('./postgres');
 const {getSupplierById} = require('./postgres');
+const {getOrderDetailByCodeOrder} = require('./postgres');
+const {getProductByName} = require('./postgres');
 
 
 var router = express.Router();
@@ -177,5 +179,26 @@ router.get('/product/category', async(req, res) =>{
 
     res.json(categories);
 })
+
+/**
+ * GET - to get order detail by codeorder
+ */
+router.get('/order/:codeOrder', async(req, res) =>{
+    const {codeOrder} = req.params;
+
+    const orderDetail = await getOrderDetailByCodeOrder(codeOrder);
+
+    res.json(orderDetail);
+})
+
+router.get('/product/:productName', async(req, res) =>{
+    const {productName} = req.params
+
+    const message = await getProductByName(productName);
+
+    res.json(message);
+})
+
+router.get('/order')
 
 module.exports = router;
