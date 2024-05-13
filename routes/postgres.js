@@ -418,10 +418,7 @@ async function getProductByName(productName){
 
     const result = await executeQuery(sql, value);
 
-    return {
-        'message':"succesfully",
-        'result': result.rows[0]
-    }
+    return result.rows[0]
 }
 
 
