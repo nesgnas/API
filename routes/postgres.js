@@ -281,12 +281,16 @@ const getOrderDetailByCodeOrder = async (codeOrder) =>{
 
 /** GET - function to get all product on product page */
 async function getAllProdct(){
-    const sql = `SELECT Product.PID, Type.TName as Category,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status, Product.unitprice, Product.costprice
-                FROM Product
-                    INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
-                    INNER JOIN Product_Category ON Product.PID = Product_Category.PID
-                    INNER JOIN Type ON Product_Category.TID = Type.TID
-                    INNER JOIN Supplier ON Supplier.Suppliername = Product.Suppliername;`;
+    // const sql = `SELECT Product.PID, Type.TName as Category,Product.Pname,Supplier.SupplierName, Product_Warehouse.Status, Product.unitprice, Product.costprice
+    //             FROM Product
+    //                 INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
+    //                 INNER JOIN Product_Category ON Product.PID = Product_Category.PID
+    //                 INNER JOIN Type ON Product_Category.TID = Type.TID
+    //                 INNER JOIN Supplier ON Supplier.Suppliername = Product.Suppliername;`;
+
+    const sql = `SELECT Product.PID , PName , Type.TName , Product.SupplierName , Product.CostPrice , Product.UnitPrice 
+    FROM Product INNER JOIN Product_Category ON Product.PID = Product_Category.PID 
+    INNER JOIN Type ON Product_Category.TID = Type.TID;`
     const result = await executeQuery(sql);
 
     return result.rows;
