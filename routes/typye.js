@@ -198,9 +198,9 @@ router.get('/order/:codeOrder', async(req, res) =>{
 router.get('/product/:productName', async(req, res) =>{
     const {productName} = req.params
 
-    const message = await getProductByName(productName);
+    const product = await getProductByName(productName);
 
-    res.json(message);
+    res.json(product);
 })
 
 router.get('/order')
