@@ -8,8 +8,6 @@ const auth = require('../middleware/auth');
 
 var router = express.Router();
 
-router.use(auth);
-
 
 
 // get data in type by id
@@ -44,7 +42,7 @@ router.post('/', async(req, res) =>{
     res.json(createItem);
 })
 
-router.post('/huh', async(req, res) =>{
+router.post('/huh',auth, async(req, res) =>{
     res.json({
         "message": "add successfully",
 
