@@ -4,6 +4,8 @@ const { deleteObjectById} = require("./postgres");
 const { createType} = require("./postgres");
 const { updateItem} = require("./postgres");
 
+const auth = require('../middleware/auth');
+
 var router = express.Router();
 
 
@@ -39,6 +41,15 @@ router.post('/', async(req, res) =>{
 
     res.json(createItem);
 })
+
+router.post('/huh',auth, async(req, res) =>{
+    res.json({
+        "message": "add successfully",
+
+    });
+})
+
+
 
 /**
  * PUT_CHECK
