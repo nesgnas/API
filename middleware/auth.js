@@ -5,7 +5,7 @@ const auth = async (req, res, next) => {
 
     if (token!= null) {
         token = token.split(' ')[1];
-        console.log(token);
+        //console.log(token);
         try {
 
             let user = jwt.verify(token, process.env.JWT_SECRET);
