@@ -20,6 +20,8 @@ const {getCategoryNameInProductForm} = require('./postgres');
 const {getSupplierById} = require('./postgres');
 const {getOrderDetailByCodeOrder} = require('./postgres');
 const {getProductByName} = require('./postgres');
+const {exportProduct} = require('./postgres');
+const {deleleProduct} = require('./postgres');
 
 
 var router = express.Router();
@@ -203,6 +205,25 @@ router.get('/product/:productName', async(req, res) =>{
     res.json(product);
 })
 
-router.get('/order')
+/**
+ * POST - insert into export history table
+ */
+router.post('/export', async(req, res) =>{
+    const {warehouseName, productName, supplierName, sxportQuantity} = req.body;
+    const message = await exportProduct(warehouseName, productName, supplierName, sxportQuantity);
+
+    res.json(message);
+})
+
+/**
+ * DELETE - delete product when export
+ */
+
+router.delete('/product/productlist/:id', async(req, res) =>{
+    const {id} = req.params;
+    const message = await deleleProduct(id);
+
+    res.json(message);
+})
 
 module.exports = router;
