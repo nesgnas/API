@@ -10,6 +10,8 @@ var router = express.Router();
 
 
 
+router.use(auth)
+
 // get data in type by id
 router.get('/:id', async (req, res) => {
     const objectId = req.params.id;
@@ -42,7 +44,7 @@ router.post('/', async(req, res) =>{
     res.json(createItem);
 })
 
-router.post('/huh',auth, async(req, res) =>{
+router.post('/huh', async(req, res) =>{
     res.json({
         "message": "add successfully",
 
