@@ -19,9 +19,9 @@ const {createNewOrder} = require('./postgres');
 const {getCategoryNameInProductForm} = require('./postgres');
 const {getSupplierById} = require('./postgres');
 const {getOrderDetailByCodeOrder} = require('./postgres');
-const {getProductByName} = require('./postgres');
 const {exportProduct} = require('./postgres');
 const {deleleProduct} = require('./postgres');
+const {getProductByID} = require('./postgres');
 
 
 var router = express.Router();
@@ -200,20 +200,20 @@ router.get('/order/:codeOrder', async(req, res) =>{
 /**
  * GET - get product by product name
  */
-router.get('/product/:productName', async(req, res) =>{
-    const {productName} = req.params
+router.get('/product/:productID', async(req, res) =>{
+    const {productID} = req.params
 
-    const product = await getProductByName(productName);
+    const product = await getProductByID(productID);
 
     res.json(product);
 })
 
 /**
- * POST - insert into export history table
+ * POST - export product
  */
 router.post('/export', async(req, res) =>{
-    const {warehouseName, productName, supplierName, sxportQuantity} = req.body;
-    const message = await exportProduct(warehouseName, productName, supplierName, sxportQuantity);
+    const {warehouseName, productName, supplierName, exportQuantity} = req.body;
+    const message = await exportProduct(warehouseName, productName, supplierName, exportQuantity);
 
     res.json(message);
 })
