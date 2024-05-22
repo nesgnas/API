@@ -335,19 +335,21 @@ function getSupplierName(allSupplier){
 }
 
 //POST - function to create new order
-async function createNewOrder(orders){//maybe there are other supplier name instead of only 1
-    const sql = `INSERT INTO Order_Detail(Order_Detail_Date, SupplierName) 
-            VALUES (current_timestamp, $1);`;
-    const value = [orders[0].supplierName];
-    await executeQuery(sql, value);
-    console.log('huy dep trai: ' + orders.length);
-
+async function createNewOrder(orders){
     for(var order of orders){
+        await insertIntoOrderDetail(order);
         await insertIntoProductOrderTable(order);
         await insertIntoProductWarehouseTable(order);
     }
 
     return { message: "create success" }
+}
+
+async function insertIntoOrderDetail(order){
+    // const sql = `INSERT INTO Order_Detail(Order_Detail_Date, SupplierName) VALUES ((current_timestamp,'DD/MM/YYYY'), $1);`;
+    const sql = `INSERT INTO Order_Detail (SupplierName, Order_Detail_Date) VALUES ($1, TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY HH24:MI:SS'));`;
+    const value = [order.SupplierName];
+    await executeQuery(sql, value);
 }
 
 //function to insert into productOrder table - part of create new order POST
@@ -366,52 +368,41 @@ async function insertIntoProductOrderTable(order){
     ), CURRENT_TIMESTAMP, $6
     FROM Needed_PID;
     `;
-    // const sql = `
-    // WITH Needed_PID as (
-    //     SELECT Product.PID AS NeededPID FROM Product WHERE  
-    //     Product.Pname = $1  and Product.SupplierName = $2
-    // )
-    // INSERT INTO Product_Order(PID,ProductName,SupplierName,WarehouseName,Order_Detail_ID,OrderDate,OrderQuantity) 
-    // VALUES (Needed_PID.NeededPID , $3, $4, $5,(    SELECT Order_Detail.CodeOrder FROM Order_Detail ORDER BY CodeOrder DESC LIMIT 1),( to_char(current_timestamp , 'DD/MM/YYYY')), $6 );
-    // `
-    const values = [order.productName, order.supplierName, order.productName, order.supplierName, order.warehouseName, order.quantity];
+    const values = [order.ProductName, order.SupplierName, order.ProductName, order.SupplierName, order.WarehouseName, order.Quantity];
     await executeQuery(sql, values);
 }
 
 //function to insert into productWarehouse table - part of create new order POST
 async function insertIntoProductWarehouseTable(order){
-    console.log('warehouse');
+    console.log('product warehose')
     const sql = `
-    WITH NeededPID as(
-        SELECT Product.PID AS NeededPID FROM Product where  Product.Pname = $1  and Product.SupplierName = $2
-    ),
-     Existing_Record AS (
-         SELECT *
-         FROM Product_Warehouse
-         WHERE PID = (SELECT NeededPID.NeededPID from NeededPID) and WName = $3
-     )
-
-    -- Insert or update the record
-    INSERT INTO Product_Warehouse (WName, PID, Quantity, LastUpdatedDate, LastUpdatedTime, Status)
-    VALUES ($4, (SELECT NeededPID FROM NeededPID), $5,
-            TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
-            TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
-            CASE
-                WHEN $6 <= 0 THEN 'Out of Stock'
-                WHEN $7 < 10 THEN 'Low Stock'
-                ELSE 'In Stock'
-            END
-    )ON CONFLICT (PID, WName) DO UPDATE SET
-            Quantity = Product_Warehouse.Quantity + EXCLUDED.Quantity,
-            LastUpdatedDate = to_char(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
-            LastUpdatedTime = to_char(LOCALTIMESTAMP AT TIME ZONE 'GMT+7','HH24:MI:SS'),
-            Status = CASE
-                        WHEN Product_Warehouse.Quantity + EXCLUDED.Quantity <= 0 THEN 'Out of Stock'
-                        WHEN Product_Warehouse.Quantity + EXCLUDED.Quantity < 10 THEN 'Low Stock'
-                        ELSE 'In Stock'
-                END;
-    `;
-    const values = [order.productName, order.supplierName, order.warehouseName, order.warehouseName, order.quantity, order.quantity, order.quantity];
+    INSERT INTO Product_Warehouse (WName, PID, Quantity, LastUpdatedDate, LastUpdatedTime, Status) 
+    VALUES (
+        $1, 
+        (SELECT Product.PID
+        FROM Product 
+        WHERE Product.Pname = $2
+        AND Product.SupplierName = $3), 
+        $4,
+        TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MYYYY'),
+        TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
+        CASE
+            WHEN $5 <= 0 THEN 'Out of Stock'
+            WHEN $6 < 10 THEN 'Low Stock'
+            ELSE 'In Stock'
+        END
+    )
+    ON CONFLICT (PID, WName) DO UPDATE SET
+        Quantity = Product_Warehouse.Quantity + EXCLUDED.Quantity,
+        LastUpdatedDate = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
+        LastUpdatedTime = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
+        Status = CASE
+            WHEN (Product_Warehouse.Quantity + EXCLUDED.Quantity) <= 0 THEN 'Out of Stock'
+            WHEN (Product_Warehouse.Quantity + EXCLUDED.Quantity) < 10 THEN 'Low Stock'
+            ELSE 'In Stock'
+        END;
+    `
+    const values = [order.WarehouseName, order.ProductName, order.SupplierName, order.Quantity, order.Quantity, order.Quantity];
     await executeQuery(sql, values);
 }
 
