@@ -10,10 +10,11 @@ const auth = async (req, res, next) => {
 
             let user = jwt.verify(token, process.env.JWT_SECRET);
 
-            res.json({
-                "status": "success",
-                "userId": user.uid,
-            });
+            // res.json({
+            //     "status": "success",
+            //     "userId": user.uid,
+            // });
+            next()
 
         } catch (err) {
             return res.status(401).json({
