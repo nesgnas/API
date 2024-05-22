@@ -2,6 +2,9 @@ var express = require('express')
 const { getObjectById, countProduct, updateType, deleteType, getLowStocks, countCatalog, getListLowQuantity} = require("./postgres");
 var router = express.Router();
 
+const auth = require('../middleware/auth');
+
+router.use(auth)
 
 // GET_API -- list LowQuality
 router.get('/listLowQuantity', async (req,res)=>{
