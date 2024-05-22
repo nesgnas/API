@@ -347,7 +347,8 @@ async function createNewOrder(orders){
 
 async function insertIntoOrderDetail(order){
     // const sql = `INSERT INTO Order_Detail(Order_Detail_Date, SupplierName) VALUES ((current_timestamp,'DD/MM/YYYY'), $1);`;
-    const sql = `INSERT INTO Order_Detail (SupplierName, Order_Detail_Date) VALUES ($1, TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY HH24:MI:SS'));`;
+    const sql = `INSERT INTO Order_Detail (SupplierName, Order_Detail_Date) 
+    VALUES ($1, TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY HH24:MI:SS'));`;
     const value = [order.SupplierName];
     await executeQuery(sql, value);
 }
@@ -415,29 +416,86 @@ async function getCategoryNameInProductForm(){
 }
 
 /**
-    get prodcut by product name
+    get prodcut by product id
  */
-async function getProductByName(productName){
-    const sql = 'SELECT * FROM product WHERE pname= $1;'
-    const value = [productName];
+async function getProductByID(productID){
+    const sql = 'SELECT * FROM product WHERE pid= $1;'
+    const values = [productID];
 
-    const result = await executeQuery(sql, value);
+    const result = await executeQuery(sql, values);
 
-    return result.rows[0]
+    return result.rows[0];
 }
 
 /**
  * post export product
  */
 async function exportProduct(warehouseName, productName, supplierName, exportQuantity){
-    const sql = `INSERT INTO Export(WName , ProductName , SupplierName , ExportQuantity , ExportDate) 
-        VALUES ($1, $2, $3, $4 , TO_CHAR(CURRENT_DATE, 'DD/MM/YYYY') );`;
-    const value = [warehouseName, productName, supplierName, exportQuantity];
+    await insertIntoExportTable(warehouseName, productName, supplierName, exportQuantity);
+    console.log('done insert into export')
+    await updateProductWarehouse(warehouseName, productName, supplierName, exportQuantity);
+    console.log('done update')
 
-    await executeQuery(sql, value);
     return {
         message: "succcess"
     }
+}
+
+async function insertIntoExportTable(warehouseName, productName, supplierName, exportQuantity){
+    const sql = `
+    INSERT INTO Export (WName, PID, ProductName, SupplierName, ExportQuantity, ExportDate)
+    VALUES (
+    $1,
+    (SELECT p.PID FROM Product p WHERE p.PName = $2 AND p.SupplierName = $3),
+    $4,
+    $5,
+    $6,
+    TO_CHAR(CURRENT_TIMESTAMP , 'DD/MM/YYYY')
+    );
+    `
+    const values = [warehouseName, warehouseName, supplierName, productName, supplierName, exportQuantity];
+
+    await executeQuery(sql, values);
+}
+
+async function updateProductWarehouse(warehouseName, productName, supplierName, exportQuantity){
+    const sql = `
+    WITH Needed_export_PID AS (
+        SELECT Product.PID AS NeededPID
+        FROM Product
+        WHERE Product.Pname = $1 AND Product.SupplierName = $2
+        ),
+        Existing_Record AS (
+        SELECT *
+        FROM Product_Warehouse
+        WHERE PID = (SELECT NeededPID FROM Needed_export_PID) AND WName = $3
+        )
+        -- Perform the update if conditions are met
+        UPDATE Product_Warehouse AS pw
+        SET
+        Quantity = CASE
+        WHEN pw.Quantity >= $4  THEN pw.Quantity - $5
+        ELSE pw.Quantity  -- Do not change Quantity when insufficient
+        END,
+        Error_Message = CASE
+        WHEN  pw.Quantity < $6 THEN 'Insufficient quantity for update'
+        ELSE NULL -- Reset error message if quantity is sufficient
+        END,
+        LastUpdatedDate = TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
+        LastUpdatedTime = TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
+        Status = CASE
+        WHEN pw.Quantity - $7 = 0 THEN 'Out of Stock'
+        WHEN pw.Quantity - $8 < 10 THEN 'Low Stock'
+        ELSE 'In Stock'
+        END
+        FROM Existing_Record er
+        
+        WHERE pw.PID = er.PID AND pw.WName = $9;
+    `
+    values = [productName, supplierName, warehouseName, exportQuantity, exportQuantity, exportQuantity, exportQuantity, exportQuantity, warehouseName];
+
+    await executeQuery(sql, values)
+    
 }
 
 /**
@@ -527,8 +585,8 @@ module.exports = {
    createNewOrder,
    getCategoryNameInProductForm,
    getSupplierById,
-   getProductByName,
    getOrderDetailByCodeOrder,
    exportProduct,
    deleleProduct,
+   getProductByID,
 }
