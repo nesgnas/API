@@ -26,6 +26,9 @@ const {deleleProduct} = require('./postgres');
 
 var router = express.Router();
 
+const auth = require('../middleware/auth');
+
+router.use(auth)
 /**
  * GET-get the total product in Overal Inventory
  */
