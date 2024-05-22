@@ -17,13 +17,13 @@ const auth = async (req, res, next) => {
 
         } catch (err) {
             return res.status(401).json({
-                "error": "Unauthorized",
+                "error": "Unauthorized--1",
             });
         }
 
     } else {
         return res.status(401).json({
-            "error": "Unauthorized",
+            "error": "Unauthorized--2",
         });
     }
 
