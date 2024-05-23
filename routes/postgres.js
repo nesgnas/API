@@ -212,10 +212,10 @@ async function newGetSuppliers(){
 /**
  * GET - function to get supplier by id
  */
-async function getSupplierById(supplierName){
-    const sql = `SELECT * FROM Supplier WHERE suppliername= $1`;
+async function getSupplierById(supplierId){
+    const sql = `SELECT * FROM Supplier WHERE sid= $1`;
 
-    const value = [supplierName];
+    const value = [supplierId];
     const result = await executeQuery(sql, value);
 
     return result.rows[0];

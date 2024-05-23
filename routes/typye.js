@@ -79,17 +79,16 @@ router.get('/product_list', async(req, res) =>{
  * GET show supplier
  */
 router.get('/supplier', async(req, res) =>{
-    const suppliers = await newGetSuppliers();
+    const suppliers = await getSuppliers();
     res.json(suppliers);
 })
 
 /**
  * GET get supplier by id
  */
-router.get('/supplier/:supplierName', async(req, res) =>{
-    const {supplierName} = req.params; 
-    console.log(supplierName)
-    const supplier = await getSupplierById(supplierName);
+router.get('/supplier/:supplierId', async(req, res) =>{
+    const {supplierId} = req.params; 
+    const supplier = await getSupplierById(supplierId);
 
     res.json(supplier);
 })
