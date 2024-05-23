@@ -193,14 +193,21 @@ async function getProductList(){
     return result.rows;
 }
 
-/**
- * GET - funtion to return all the supplier
- */
+
 async function getSuppliers(){
     const sql = `SELECT * FROM Supplier`;
     const result = await executeQuery(sql);
     return result.rows;
 }
+
+/**
+ * GET - funtion to return all the supplier
+ */
+async function newGetSuppliers(){
+    const sql = `SELECT SupplierName , SupplierContact , SupplierAddress FROM Supplier;`;
+    const result = await executeQuery(sql);
+    return result.rows;
+} 
 
 /**
  * GET - function to get supplier by id
@@ -297,7 +304,7 @@ async function getAllProdct(){
  * Part of the new order API - get all product by supplier
  */
 async function getAllProductbySupplier(supplierName){
-    const sql = `SELECT Product.Pname FROM Product WHERE Product.SupplierName = $1;`;
+    const sql = `SELECT Product.Pname, Product.PID FROM Product WHERE Product.SupplierName = $1;`;
     const value = [supplierName];
     const result = await executeQuery(sql, value);
 
@@ -347,6 +354,7 @@ async function createNewOrder(orders){
 
 async function insertIntoOrderDetail(order){
     // const sql = `INSERT INTO Order_Detail(Order_Detail_Date, SupplierName) VALUES ((current_timestamp,'DD/MM/YYYY'), $1);`;
+    console.log("order detail");
     const sql = `INSERT INTO Order_Detail (SupplierName, Order_Detail_Date) 
     VALUES ($1, TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY HH24:MI:SS'));`;
     const value = [order.SupplierName];
@@ -356,7 +364,8 @@ async function insertIntoOrderDetail(order){
 //function to insert into productOrder table - part of create new order POST
 async function insertIntoProductOrderTable(order){
     console.log("productorder");
-    const sql = `INSERT INTO Product_Order(PID, ProductName, SupplierName, WarehouseName, Order_Detail_ID, OrderDate, OrderQuantity)
+    const sql = `
+    INSERT INTO Product_Order(PID, ProductName, SupplierName, WarehouseName, Order_Detail_ID, OrderDate, OrderQuantity)
     WITH Needed_PID AS (
         SELECT Product.PID AS NeededPID 
         FROM Product 
@@ -404,6 +413,60 @@ async function insertIntoProductWarehouseTable(order){
         END;
     `
     const values = [order.WarehouseName, order.ProductName, order.SupplierName, order.Quantity, order.Quantity, order.Quantity];
+    // const sql=`
+    // DO $$
+    // DECLARE
+    //     v_max_capacity INTEGER;
+    //     v_current_quantity INTEGER;
+    //     v_new_quantity INTEGER;
+    //     v_product_id varchar(100);
+    // BEGIN
+    //     SELECT wcapacity INTO v_max_capacity
+    //     FROM Warehouse_Capacity
+    //     WHERE WName = $1;
+    
+    //     SELECT PID INTO v_product_id
+    //     FROM Product
+    //     WHERE Pname = $2 AND SupplierName = $3;
+    
+    //     SELECT COALESCE(SUM(Quantity), 0) INTO v_current_quantity
+    //     FROM Product_Warehouse
+    //     WHERE WName = $4;
+    
+        
+    //     v_new_quantity := v_current_quantity + $5;
+    
+    //     -- Check if the new quantity exceeds the max capacity
+    //     IF v_new_quantity > v_max_capacity THEN
+    //         RAISE EXCEPTION 'Total quantity % exceeds max capacity % in %', v_new_quantity, v_max_capacity, $6;
+    //     ELSE
+    //         -- Perform the insert or update
+    //         INSERT INTO Product_Warehouse (WName, PID, Quantity, LastUpdatedDate, LastUpdatedTime, Status) 
+    //         VALUES (
+    //             $7, 
+    //             v_product_id, 
+    //             $8,
+    //             TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
+    //             TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
+    //             CASE
+    //                 WHEN v_new_quantity  <= 0 THEN 'Out of Stock'
+    //                 WHEN v_new_quantity < 10 THEN 'Low Stock'
+    //                 ELSE 'In Stock'
+    //             END
+    //         )
+    //         ON CONFLICT (PID, WName) DO UPDATE SET
+    //             Quantity = Product_Warehouse.Quantity + EXCLUDED.Quantity,
+    //             LastUpdatedDate = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
+    //             LastUpdatedTime = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
+    //             Status = CASE
+    //                 WHEN (Product_Warehouse.Quantity + EXCLUDED.Quantity) <= 0 THEN 'Out of Stock'
+    //                 WHEN (Product_Warehouse.Quantity + EXCLUDED.Quantity) < 10 THEN 'Low Stock'
+    //                 ELSE 'In Stock'
+    //             END;
+    //     END IF;
+    // END $$;
+    // `;
+    // values = [order.WarehouseName, order.ProductName, order.SupplierName, order.WarehouseName, order.Quantity, order.WarehouseName, order.WarehouseName, order.Quantity];
     await executeQuery(sql, values);
 }
 
@@ -549,6 +612,167 @@ async function deleteProductInProduct(id){
     await executeQuery(sql, value);
 }
 
+/**
+ * Delete supplier by name
+ */
+async function deleteSupplierByName(supplierName){  
+    await deleteFromProductWareHouse(supplierName);
+    console.log(1)
+    await deleteFromProductOrder(supplierName);
+    console.log(2)
+    await deleteFromProductCategory(supplierName);
+    console.log(3)
+    await deleteFromProduct(supplierName);
+    console.log(4)
+    await deleteFromSupplier(supplierName);
+    console.log(5)
+
+    return {
+        message: "success"
+    }
+}
+
+async function deleteFromProductWareHouse(supplierName){
+    const sql = `
+    DELETE FROM product_warehouse
+	WHERE PID IN (SELECT PID FROM Product WHERE SupplierName = $1)
+    `;
+    const value = [supplierName];
+
+    await executeQuery(sql, value);
+}
+
+async function deleteFromProductOrder(supplierName){
+    const sql = `
+    DELETE FROM product_order
+	WHERE PID IN (SELECT PID FROM Product WHERE SupplierName = $1)
+    `;
+    const value = [supplierName];
+
+    await executeQuery(sql, value);
+}
+
+async function deleteFromProductCategory(supplierName){
+    const sql = `
+    DELETE FROM product_category
+	WHERE PID IN (SELECT PID FROM Product WHERE SupplierName = $1)
+    `;
+    const value = [supplierName];
+
+    await executeQuery(sql, value);
+}
+
+async function deleteFromProduct(supplierName){
+    const sql = `
+    DELETE FROM PRODUCT
+	WHERE SupplierName = $1
+    `;
+    const value = [supplierName];
+
+    await executeQuery(sql, value);
+}
+
+async function deleteFromSupplier(supplierName){
+    const sql = `
+    DELETE FROM Supplier
+	WHERE SID = (SELECT SID FROM Supplier WHERE SupplierName = $1);
+    `;
+    const value = [supplierName];
+
+    await executeQuery(sql, value);
+}
+
+/**
+ * GET percentate capacity
+ */
+async function getPercentageCapacity(warehouseName){
+    const sql = `
+        SELECT 
+        pw.WName,
+        ((SUM(pw.Quantity::float) / wc.Wcapacity::float) * 100) AS Account_Space_Percentage,
+        (100 - ((SUM(pw.Quantity::float) / wc.Wcapacity::float) * 100)) AS Free_Space_Percentage
+    FROM 
+        Product_Warehouse pw
+    JOIN 
+        Warehouse_capacity wc 
+    ON 
+        pw.WName = wc.WName 
+    WHERE 
+        pw.WName = $1
+    GROUP BY 
+        pw.WName, wc.Wcapacity;
+    `;
+    const values = [warehouseName];
+    console.log('here')
+
+    const data = await executeQuery(sql, values);
+
+    return data.rows;
+}
+
+/**
+ * GET total money
+ */
+async function getTotalMoney(){
+    const sql = `
+    SELECT
+    COALESCE(SUM(e.ExportQuantity * p.UnitPrice), 0) AS total_price
+    FROM
+    (
+    SELECT DISTINCT EXTRACT(MONTH FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY')) AS month_number
+    FROM Dim_date d
+    WHERE EXTRACT(YEAR FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY')) = EXTRACT(YEAR FROM CURRENT_DATE)
+    ) months
+    LEFT JOIN (
+    SELECT
+    e.ExportQuantity,
+    e.PID,
+    e.ExportDate,
+    e.WName
+    FROM
+    Export_History e
+    WHERE
+    EXTRACT(YEAR FROM TO_DATE(e.ExportDate, 'DD-MM-YYYY')) = EXTRACT(YEAR FROM CURRENT_DATE)
+
+    ) e ON EXTRACT(MONTH FROM TO_DATE(e.ExportDate, 'DD-MM-YYYY')) = months.month_number
+
+    LEFT JOIN Product p ON p.PID = e.PID
+    GROUP BY
+    months.month_number
+    ORDER BY
+    months.month_number ASC;
+    `
+
+    console.log("huy dep trai");
+    const data = await executeQuery(sql, []);
+
+    return data.rows;
+}
+
+/**
+ * GET tatol order
+ */
+async function getTotalOrder(){
+    sql =`
+        SELECT
+    COUNT(DISTINCT e.EID)
+    FROM
+    Export_History e
+    RIGHT JOIN
+    Dim_date d ON EXTRACT(DAY FROM TO_DATE(e.ExportDate, 'DD-MM-YYYY')) = EXTRACT(DAY FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY'))
+    AND EXTRACT(MONTH FROM TO_DATE(e.ExportDate, 'DD-MM-YYYY')) = EXTRACT(MONTH FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY'))
+    AND EXTRACT(YEAR FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY')) = EXTRACT(YEAR FROM CURRENT_DATE)
+    GROUP BY
+    EXTRACT(MONTH FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY'))
+    ORDER BY
+    EXTRACT(MONTH FROM TO_DATE(d.Currentdate, 'DD-MM-YYYY')) ASC;
+    `;
+    const data = await executeQuery(sql);
+    return data.rows
+}
+
+
+
 
 pool.end;
 
@@ -589,4 +813,9 @@ module.exports = {
    exportProduct,
    deleleProduct,
    getProductByID,
+   deleteSupplierByName,
+   getPercentageCapacity,
+   getTotalMoney,
+   getTotalOrder,
+   newGetSuppliers,
 }
