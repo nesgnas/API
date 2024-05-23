@@ -27,6 +27,8 @@ const {getPercentageCapacity} = require('./postgres');
 const {getTotalMoney} = require('./postgres');
 const {getTotalOrder} = require('./postgres');
 const {newGetSuppliers} = require('./postgres');
+const {editProduct} = require('./postgres');
+const {editSupplier} = require('./postgres');
 
 
 
@@ -277,6 +279,40 @@ router.get('/dashboard/:warehouseName', async(req, res) =>{
     const data = await getPercentageCapacity(warehouseName);
 
     res.json(data);
+})
+
+/**
+ * POST edit product form
+ */
+router.post('/product/productList/:id', async(req, res) =>{
+    const {id} = req.params;
+    const {inputProductName, inputSupplierName, inputCostPrice, inputUnitPrice} = req.body;
+    console.log("huy dep trai");
+
+    const product = await getProductByID(id);
+    console.log("product: " + product);
+    console.log("product: " + product.suppliername);
+
+    const message = await editProduct(product, inputProductName, inputSupplierName, inputCostPrice, inputUnitPrice);
+
+    res.json(message);
+})
+
+/**
+ * POST edit supplier form
+ */
+router.post('/supplier/supplierLlist/:id', async(req, res) =>{
+    const {id} = req.params;
+    const {inputSupplierName, inputSupplierContact, inputSupplierAddress} = req.body;
+    console.log("huy dep trai")
+
+    const supplier = await getSupplierById(id);
+    console.log("supplier ID: " + supplier.sid);
+    console.log("product: " + supplier.suppliername);
+
+    const message = await editSupplier(supplier, inputSupplierName, inputSupplierContact, inputSupplierAddress);
+
+    res.json(message);
 })
 
 module.exports = router;
