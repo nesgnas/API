@@ -22,6 +22,12 @@ const {getOrderDetailByCodeOrder} = require('./postgres');
 const {exportProduct} = require('./postgres');
 const {deleleProduct} = require('./postgres');
 const {getProductByID} = require('./postgres');
+const {deleteSupplierByName} = require('./postgres');
+const {getPercentageCapacity} = require('./postgres');
+const {getTotalMoney} = require('./postgres');
+const {getTotalOrder} = require('./postgres');
+const {newGetSuppliers} = require('./postgres');
+
 
 
 var router = express.Router();
@@ -73,7 +79,7 @@ router.get('/product_list', async(req, res) =>{
  * GET show supplier
  */
 router.get('/supplier', async(req, res) =>{
-    const suppliers = await getSuppliers();
+    const suppliers = await newGetSuppliers();
     res.json(suppliers);
 })
 
@@ -143,6 +149,11 @@ router.get('/order/products/:supplierName', async(req, res) =>{
   
     res.json(allProduct);
 })
+
+/**
+ * GEt - get product by product name
+ */
+
 
 /**
  * GET - get all warehouse (part of the function new oreder)
@@ -224,6 +235,50 @@ router.delete('/product/productlist/:id', async(req, res) =>{
     const message = await deleleProduct(id);
 
     res.json(message);
+})
+
+/**
+ * DELETE - delete supplier
+ */
+router.delete('/supplier/:supplierName', async(req, res) =>{
+    const {supplierName} = req.params;
+    const message = await deleteSupplierByName(supplierName);
+
+    res.json(message);
+
+})
+
+/**
+ * GET total money
+ */
+router.get('/dashboard/totalMoney', async(req, res) =>{
+    console.log("huy dep trai")
+    
+    const data = await getTotalMoney();
+
+    res.json(data);
+})
+
+/*
+ * GET total order for chart
+ */
+router.get('/dashboard/totalOrder', async(req, res) =>{
+    
+    const data = await getTotalOrder();
+
+    res.json(data);
+})
+
+
+
+/**
+ * GET get data for chart 
+ */
+router.get('/dashboard/:warehouseName', async(req, res) =>{
+    const {warehouseName} = req.params;
+    const data = await getPercentageCapacity(warehouseName);
+
+    res.json(data);
 })
 
 module.exports = router;
