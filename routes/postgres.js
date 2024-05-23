@@ -495,7 +495,7 @@ async function getProductByID(productID){
  */
 async function exportProduct(warehouseName, productName, supplierName, exportQuantity){
     await insertIntoExportTable(warehouseName, productName, supplierName, exportQuantity);
-    console.log('done insert into export')
+    console.log('done insert into export');
     await updateProductWarehouse(warehouseName, productName, supplierName, exportQuantity);
     console.log('done update')
 
@@ -540,22 +540,18 @@ async function updateProductWarehouse(warehouseName, productName, supplierName, 
         WHEN pw.Quantity >= $4  THEN pw.Quantity - $5
         ELSE pw.Quantity  -- Do not change Quantity when insufficient
         END,
-        Error_Message = CASE
-        WHEN  pw.Quantity < $6 THEN 'Insufficient quantity for update'
-        ELSE NULL -- Reset error message if quantity is sufficient
-        END,
         LastUpdatedDate = TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'DD/MM/YYYY'),
         LastUpdatedTime = TO_CHAR(LOCALTIMESTAMP AT TIME ZONE 'GMT+7', 'HH24:MI:SS'),
         Status = CASE
-        WHEN pw.Quantity - $7 = 0 THEN 'Out of Stock'
-        WHEN pw.Quantity - $8 < 10 THEN 'Low Stock'
+        WHEN pw.Quantity - $6 = 0 THEN 'Out of Stock'
+        WHEN pw.Quantity - $7 < 10 THEN 'Low Stock'
         ELSE 'In Stock'
         END
         FROM Existing_Record er
         
-        WHERE pw.PID = er.PID AND pw.WName = $9;
+        WHERE pw.PID = er.PID AND pw.WName = $8;
     `
-    values = [productName, supplierName, warehouseName, exportQuantity, exportQuantity, exportQuantity, exportQuantity, exportQuantity, warehouseName];
+    values = [productName, supplierName, warehouseName, exportQuantity, exportQuantity, exportQuantity, exportQuantity, warehouseName];
 
     await executeQuery(sql, values)
     

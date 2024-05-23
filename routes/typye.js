@@ -252,7 +252,6 @@ router.delete('/supplier/:supplierName', async(req, res) =>{
  * GET total money
  */
 router.get('/dashboard/totalMoney', async(req, res) =>{
-    console.log("huy dep trai")
     
     const data = await getTotalMoney();
 
