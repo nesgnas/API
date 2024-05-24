@@ -29,6 +29,7 @@ const {getTotalOrder} = require('./postgres');
 const {newGetSuppliers} = require('./postgres');
 const {editProduct} = require('./postgres');
 const {editSupplier} = require('./postgres');
+const {getExportHistory} = require('./postgres');
 
 
 
@@ -314,5 +315,15 @@ router.post('/supplier/supplierLlist/:id', async(req, res) =>{
 
     res.json(message);
 })
+
+/**
+ * GET export history
+ */
+router.get('/exportHistory', async(req, res) =>{
+    const data = await getExportHistory();
+
+    res.json(data);
+})
+
 
 module.exports = router;

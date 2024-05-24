@@ -933,6 +933,17 @@ async function editSupplier(
     }
 }
 
+/**
+ * GET export history
+ */
+async function getExportHistory(){
+    const sql = "SELECT * FROM export_history;";
+
+    const data = await executeQuery(sql);
+
+    return data.rows;
+}
+
 pool.end;
 
 module.exports = {
@@ -977,4 +988,5 @@ module.exports = {
     newGetSuppliers,
     editProduct,
     editSupplier,
+    getExportHistory,
 };
