@@ -186,7 +186,7 @@ async function deleteType(id) {
 
 //GET funtion to return product list
 async function getProductList() {
-    const sql = `SELECT Product.Pname,Product_Warehouse.PID, Type.TName , Product.UnitPrice, Product_Warehouse.Status
+    const sql = `SELECT Product.Pname,Product_Warehouse.PID, Type.TName , Product.UnitPrice, Product_Warehouse.Status, Product_Warehouse.WName
                 FROM Product
                     INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
                     INNER JOIN Product_Category ON Product.PID = Product_Category.PID
@@ -295,9 +295,11 @@ async function getAllOrder() {
  * GET - function to get order detail by code order
  */
 const getOrderDetailByCodeOrder = async (codeOrder) => {
-    const sql = `SELECT ProductName , OrderQuantity , Product.UnitPrice, WarehouseName
-                FROM Product RIGHT JOIN Order_History ON (Order_History.PID = Product.PID) 
-                WHERE order_history.order_detail_id = $1;`;
+    // const sql = `SELECT ProductName , OrderQuantity , Product.UnitPrice, WarehouseName
+    //             FROM Product RIGHT JOIN Order_History ON (Order_History.PID = Product.PID) 
+    //             WHERE order_history.order_detail_id = $1;`;
+
+    const sql = `select * FROM Order_History  WHERE Order_Detail_ID = $1;`
     const value = [codeOrder];
     const result = await executeQuery(sql, value);
 
@@ -859,7 +861,8 @@ async function editProduct(
     inputProductName,
     inputSupplierName,
     inputCostPrice,
-    inputUnitPrice
+    inputUnitPrice,
+    inputCategory
 ) {
     currentCostPrice =
         currentCostPrice !== undefined ? +currentCostPrice : null;
@@ -899,6 +902,11 @@ async function editProduct(
         currentID,
     ];
 
+    const currentCategory = getCategoryById(currentID);
+    console.log('current Category: ' + currentCategory);
+
+    await editCategory(inputCategory, currentCategory, currentID);
+
     await executeQuery(sql, values);
 
     return {
@@ -906,6 +914,29 @@ async function editProduct(
     };
 }
 
+async function editCategory(inputCategory, currentCategory, currentID){
+    const sql = `
+        UPDATE Product_Category
+    SET 
+        TID = COALESCE((SELECT TID FROM Type WHERE TName = $1), (SELECT TID FROM Type WHERE TName = $2))
+    WHERE 
+        PID = $3;
+    `;
+    const values = [inputCategory, currentCategory, currentID];
+
+    await executeQuery(sql, values);
+}
+
+async function getCategoryById(currentID){
+    const sql = `
+    SELECT DISTINCT TName FROM Type t INNER JOIN Product_Category pc 
+    ON t.TID = pc.TID JOIN Product p ON pc.PID = $1;
+    `;
+    const values = [currentID];
+    const result = await executeQuery(sql, values);
+
+    return result.rows[0];
+}
 /**
  * POST edit supplier
  */
@@ -948,6 +979,8 @@ async function getExportHistory(){
 
     return data.rows;
 }
+
+
 
 pool.end;
 

@@ -33,6 +33,7 @@ const {getExportHistory} = require('./postgres');
 
 
 
+
 var router = express.Router();
 
 /**
@@ -287,14 +288,10 @@ router.get('/dashboard/:warehouseName', async(req, res) =>{
  */
 router.post('/product/productList/:id', async(req, res) =>{
     const {id} = req.params;
-    const {inputProductName, inputSupplierName, inputCostPrice, inputUnitPrice} = req.body;
-    console.log("huy dep trai");
+    const {inputProductName, inputSupplierName, inputCostPrice, inputUnitPrice, inputCategory} = req.body;
 
     const product = await getProductByID(id);
-    console.log("product: " + product);
-    console.log("product: " + product.suppliername);
-
-    const message = await editProduct(product, inputProductName, inputSupplierName, inputCostPrice, inputUnitPrice);
+    const message = await editProduct(product, inputProductName, inputSupplierName, inputCostPrice, inputUnitPrice, inputCategory);
 
     res.json(message);
 })
@@ -323,7 +320,18 @@ router.get('/exportHistory', async(req, res) =>{
     const data = await getExportHistory();
 
     res.json(data);
-})
+});
+
+// /**
+//  * POST set category for product
+//  */
+// router.post('/product/:id/addCategory', async(req, res) =>{
+//     const {id} = req.params;
+//     const {inputCategory} = req.body;
+//     const message = setCategoryForProduct(id, inputCategory);
+
+//     res.json(message);
+// })
 
 
 module.exports = router;
