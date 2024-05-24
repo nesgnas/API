@@ -222,8 +222,8 @@ router.get('/product/:productID', async(req, res) =>{
  * POST - export product
  */
 router.post('/export', async(req, res) =>{
-    const {warehouseName, productName, supplierName, exportQuantity} = req.body;
-    const message = await exportProduct(warehouseName, productName, supplierName, exportQuantity);
+    const {warehouseName, productName, supplierName, exportQuantity, employeeName} = req.body;
+    const message = await exportProduct(warehouseName, productName, supplierName, exportQuantity, employeeName);
 
     res.json(message);
 })
