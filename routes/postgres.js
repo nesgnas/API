@@ -186,11 +186,15 @@ async function deleteType(id) {
 
 //GET funtion to return product list
 async function getProductList() {
-    const sql = `SELECT Product.Pname,Product_Warehouse.PID, Type.TName , Product.UnitPrice, Product_Warehouse.Status, Product_Warehouse.WName
-                FROM Product
-                    INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
-                    INNER JOIN Product_Category ON Product.PID = Product_Category.PID
-                    INNER JOIN Type ON Product_Category.TID = Type.TID;`;
+    // const sql = `SELECT Product.Pname,Product_Warehouse.PID, Type.TName , Product.UnitPrice, Product_Warehouse.Status, Product_Warehouse.WName, 
+    //             FROM Product
+    //                 INNER JOIN Product_Warehouse ON Product.PID = Product_Warehouse.PID
+    //                 INNER JOIN Product_Category ON Product.PID = Product_Category.PID
+    //                 INNER JOIN Type ON Product_Category.TID = Type.TID;`;
+
+    const sql = `
+    SELECT pw.WName , p.PName , t.TName,p.UnitPrice , pw.Quantity, pw.Status FROM Product p INNER JOIN Product_Warehouse pw ON p.PID = pw.PID JOIN Product_Category pc ON pw.PID = pc.PID JOIN Type t  ON pc.TID = t.TID; 
+    `
 
     const result = await executeQuery(sql);
     return result.rows;
@@ -518,7 +522,26 @@ async function getCategoryNameInProductForm() {
     get prodcut by product id
  */
 async function getProductByID(productID) {
-    const sql = "SELECT * FROM product WHERE pid= $1;";
+    // const sql = "SELECT * FROM product WHERE pid= $1;";
+    const sql = `
+        SELECT 
+        p.pid, 
+        p.pname, 
+        p.suppliername, 
+        p.sid, 
+        p.costprice, 
+        p.unitprice, 
+        t.tname AS category
+    FROM 
+        product p
+    JOIN 
+        product_category pc ON p.pid = pc.pid
+    JOIN 
+        type t ON pc.tid = t.tid
+    WHERE 
+        p.pid = $1;
+
+    `
     const values = [productID];
 
     const result = await executeQuery(sql, values);
