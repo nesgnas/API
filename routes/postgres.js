@@ -193,7 +193,7 @@ async function getProductList() {
     //                 INNER JOIN Type ON Product_Category.TID = Type.TID;`;
 
     const sql = `
-    SELECT pw.WName , p.PName , t.TName,p.UnitPrice , pw.Quantity, pw.Status FROM Product p INNER JOIN Product_Warehouse pw ON p.PID = pw.PID JOIN Product_Category pc ON pw.PID = pc.PID JOIN Type t  ON pc.TID = t.TID; 
+    SELECT pw.WName , p.PName , t.TName,p.UnitPrice , pw.Quantity, pw.Status FROM Product p INNER JOIN Product_Warehouse pw ON p.PID = pw.PID JOIN Product_Category pc ON pw.PID = pc.PID JOIN Type t  ON pc.TID = t.TID;
     `
 
     const result = await executeQuery(sql);
@@ -370,8 +370,8 @@ function getSupplierName(allSupplier) {
 
 //POST - function to create new order
 async function createNewOrder(orders) {
+    await insertIntoOrderDetail(orders[0]);
     for (var order of orders) {
-        await insertIntoOrderDetail(order);
         await insertIntoProductOrderTable(order);
         await insertIntoProductWarehouseTable(order);
     }
