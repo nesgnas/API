@@ -531,13 +531,15 @@ async function exportProduct(
     warehouseName,
     productName,
     supplierName,
-    exportQuantity
+    exportQuantity,
+    employeeName
 ) {
     await insertIntoExportTable(
         warehouseName,
         productName,
         supplierName,
-        exportQuantity
+        exportQuantity,
+        employeeName
     );
     console.log("done insert into export");
     await updateProductWarehouse(
@@ -557,26 +559,29 @@ async function insertIntoExportTable(
     warehouseName,
     productName,
     supplierName,
-    exportQuantity
+    exportQuantity,
+    employeeName
 ) {
     const sql = `
-    INSERT INTO Export (WName, PID, ProductName, SupplierName, ExportQuantity, ExportDate)
+    INSERT INTO Export (WName, PID, ProductName, SupplierName, ExportQuantity, ExportDate, EmployeeName)
     VALUES (
     $1,
     (SELECT p.PID FROM Product p WHERE p.PName = $2 AND p.SupplierName = $3),
     $4,
     $5,
     $6,
-    TO_CHAR(CURRENT_TIMESTAMP , 'DD/MM/YYYY')
+    TO_CHAR(CURRENT_TIMESTAMP , 'DD/MM/YYYY'),
+    $7
     );
     `;
     const values = [
         warehouseName,
-        warehouseName,
+        productName,
         supplierName,
         productName,
         supplierName,
         exportQuantity,
+        employeeName
     ];
 
     await executeQuery(sql, values);
@@ -933,6 +938,17 @@ async function editSupplier(
     }
 }
 
+/**
+ * GET export history
+ */
+async function getExportHistory(){
+    const sql = "SELECT * FROM export_history;";
+
+    const data = await executeQuery(sql);
+
+    return data.rows;
+}
+
 pool.end;
 
 module.exports = {
@@ -977,4 +993,5 @@ module.exports = {
     newGetSuppliers,
     editProduct,
     editSupplier,
+    getExportHistory,
 };
